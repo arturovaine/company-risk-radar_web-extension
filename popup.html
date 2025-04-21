@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Company Red Flag Detector</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 16px;
+      width: 300px;
+      box-sizing: border-box;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    input, button {
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      cursor: pointer;
+      background-color: #f0f0f0;
+      border: 1px solid #aaa;
+    }
+
+    button:hover {
+      background-color: #e0e0e0;
+    }
+
+    #loading {
+      font-size: 13px;
+      font-weight: bold;
+      color: #007bff;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <form id="input-form">
+    Company name:<input type="text" id="company" placeholder="Company full name" required />
+    OpenAI API Key: <input type="password" id="api-key" placeholder="sk-..." required />
+    <button type="submit">Analyze</button>
+    <div id="loading">Analyzing...</div>
+  </form>
+
+  <script src="popup.js"></script>
+</body>
+</html>
