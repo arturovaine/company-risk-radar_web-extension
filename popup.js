@@ -4,43 +4,113 @@ document.addEventListener("DOMContentLoaded", () => {
   const companyInput = document.getElementById("company");
   const apiKeyInput = document.getElementById("api-key");
 
-  // Load saved API key
-  chrome.storage.local.get(["openai_api_key"], (result) => {
-    if (result.openai_api_key) {
-      apiKeyInput.value = result.openai_api_key;
-    }
-  });
+  loadStoredApiKey(apiKeyInput);
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    loading.style.display = "block";
+    toggleLoading(true);
 
     const company = companyInput.value.trim();
     const apiKey = apiKeyInput.value.trim();
 
     if (!company || !apiKey) {
       alert("Please fill in all fields.");
-      loading.style.display = "none";
+      toggleLoading(false);
       return;
     }
 
-    chrome.storage.local.set({ openai_api_key: apiKey });
+    saveApiKey(apiKey);
 
     try {
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "gpt-4",
-            messages: [
-              {
-                role: "user",
-                content: `
+      const responseText = await fetchCompanyAnalysis(apiKey, company);
+      const data = parseJsonResponse(responseText);
+
+      downloadJson(data, `${company}_analysis.json`);
+      alert("JSON file downloaded.");
+    } catch (error) {
+      console.error(error);
+      alert("X " + error.message);
+    } finally {
+      toggleLoading(false);
+    }
+  });
+});
+
+// Helpers
+
+function loadStoredApiKey(input) {
+  chrome.storage.local.get(["openai_api_key"], (result) => {
+    if (result.openai_api_key) {
+      input.value = result.openai_api_key;
+    }
+  });
+}
+
+function saveApiKey(apiKey) {
+  chrome.storage.local.set({ openai_api_key: apiKey });
+}
+
+function toggleLoading(state) {
+  const loading = document.getElementById("loading");
+  loading.style.display = state ? "block" : "none";
+}
+
+async function fetchCompanyAnalysis(apiKey, company) {
+  const prompt = generatePrompt(company);
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+  }
+
+  const result = await response.json();
+  const message = result.choices?.[0]?.message?.content;
+
+  if (!message) {
+    throw new Error("No message returned from OpenAI.");
+  }
+
+  return message;
+}
+
+function parseJsonResponse(responseText) {
+  try {
+    return JSON.parse(responseText);
+  } catch {
+    throw new Error("Response is not valid JSON:\n" + responseText);
+  }
+}
+
+function downloadJson(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function generatePrompt(company) {
+  return `
 Act as a corporate risk analyst. Based on your knowledge until 2023, simulate a full due diligence report on the company: "${company}".
 
 Structure your response in JSON format with the following fields:
@@ -123,52 +193,5 @@ Sources:
 
 Red Flags to Watch For
 Frequent executive turnover, ongoing or recent lawsuits, tax evasion or shady offshore structures, negative media exposure, political lobbying with no transparency, unclear or overly complex ownership structures, poor financial ratios or loss declarations, connections to sanctioned individuals/entities.
-`,
-              },
-            ],
-            temperature: 0.7,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`OpenAI API error: ${response.status} - ${errText}`);
-      }
-
-      const result = await response.json();
-      const messageContent = result.choices?.[0]?.message?.content;
-
-      if (!messageContent) {
-        throw new Error("No message returned from OpenAI.");
-      }
-
-      let parsedData;
-      try {
-        parsedData = JSON.parse(messageContent);
-      } catch {
-        throw new Error("Response is not valid JSON:\n" + messageContent);
-      }
-
-      // Download JSON file
-      const blob = new Blob([JSON.stringify(parsedData, null, 2)], {
-        type: "application/json",
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${company}_analysis.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      alert("JSON file downloaded.");
-    } catch (err) {
-      console.error(err);
-      alert("Error: " + err.message);
-    } finally {
-      loading.style.display = "none";
-    }
-  });
-});
+`;
+}
