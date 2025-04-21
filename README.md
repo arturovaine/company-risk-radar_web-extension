@@ -114,13 +114,18 @@ It then synthesizes a realistic score from **1 to 5**, even if some data is miss
 ## Default prompt:
 
 ```txt
-Act like a corporate expert investigator. Conduct a thorough investigation of the company [COMPANY NAME], including its subsidiaries, leadership, and recent activity, with a focus on identifying red flags, legal issues, financial instability, lobbying influence, or reputational risks. Your goal is to determine whether this company is a reliable, transparent, and viable partner for long-term technology or AI-related service provision.
+Act like a corporate expert investigator. Conduct a thorough investigation of the company
+[COMPANY NAME], including its subsidiaries, leadership, and recent activity, with a focus
+on identifying red flags, legal issues, financial instability, lobbying influence, or
+reputational risks. Your goal is to determine whether this company is a reliable, transparent,
+and viable partner for long-term technology or AI-related service provision.
 
 Scope of Information (Prioritize Free Sources Where Possible)
 
 Corporate Registry & Legal Status
 
-Verify official company name, registration number, headquarters, incorporation date, active/inactive status
+Verify official company name, registration number, headquarters, incorporation date,
+active/inactive status
 
 Sources:
 - OpenCorporates
@@ -182,7 +187,10 @@ Sources:
 
 
 Red Flags to Watch For
-Frequent executive turnover, ongoing or recent lawsuits, tax evasion or shady offshore structures, negative media exposure, political lobbying with no transparency, unclear or overly complex ownership structures, poor financial ratios or loss declarations, connections to sanctioned individuals/entities.
+Frequent executive turnover, ongoing or recent lawsuits, tax evasion or shady offshore
+structures, negative media exposure, political lobbying with no transparency, unclear or
+overly complex ownership structures, poor financial ratios or loss declarations,
+connections to sanctioned individuals/entities.
 
 ```
 
